@@ -1,0 +1,40 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  profiles:
+    active: dev
+  datasource:
+    hikari:
+      connectionInitSql: set time zone 'Asia/Seoul'
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/snt
+    username: sntapp
+    password: slackNotice
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+  kafka:
+    bootstrap-servers: localhost:29092
+    consumer:
+      group-id: devtaco-msg
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+
+devtaco:
+  app:
+    mongoDbPath: {mongo-db-path-with-port}
+    mongoDbAdminName: {mongo-db-admin-name}
+    mongoDbAdminPassword: {mongo-db-admin-password}
+    mongoDbName: {mongo-db-name}
+    slack-bot-token: {slack-bot-token}
+    kafka-snt-topic: {message-topic}
+    kafka-snt-group: {group-name}
+  

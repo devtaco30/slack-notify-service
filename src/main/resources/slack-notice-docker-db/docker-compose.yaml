@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  db:
+    user: "postgres"
+    build:
+      dockerfile: ./Dockerfile-postgres
+    container_name: slack-notify-service
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "snt"
+    volumes:
+      - ./common/01.init_db.sql:/docker-entrypoint-initdb.d/01.init_db.sql
+      - ./common/02.init_ddl.sql:/docker-entrypoint-initdb.d/02.init_ddl.sql
+      - ./common/03.init_data.sql:/docker-entrypoint-initdb.d/03.init_data.sql
+      - ./common/04.grant.sql:/docker-entrypoint-initdb.d/04.grant.sql
+      - db-volume:/var/lib/postgresql/data
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    ports:
+      - "22181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+volumes:
+  db-volume:
